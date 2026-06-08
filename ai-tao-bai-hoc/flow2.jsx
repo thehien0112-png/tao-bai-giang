@@ -140,6 +140,7 @@ function App(){
   const audioTimer = React.useRef(null);
 
   const toggleType = id => setTypes(s=>{const n=new Set(s);n.has(id)?n.delete(id):n.add(id);return n;});
+  const toggleOpen = id => setOpen(o => o===id ? null : id);   // bấm lại (mũi tên) để đóng
   const sel = id => types.has(id);
   const orderedResults = RTYPES.filter(t=>sel(t.id));
 
@@ -174,7 +175,7 @@ function App(){
   const resSummary = {
     baidoc:`Đã tạo · ~${LESSON.words} từ`,
     sachnoi:`Đã tạo · ${LESSON.duration} · giọng ${cfg.voice.split(' (')[0]}`,
-    baitap:`${QUESTIONS.length} câu hỏi · Chọn ${cfg.chon} · Sắp xếp ${cfg.sapxep} · Nối ${cfg.noi}`,
+    baitap:`${QUESTIONS.length} câu hỏi · ${cfg.level==='Tổng hợp'?'Tổng hợp mức độ':'Mức độ '+cfg.level}`,
   };
   const audioBusy = status.sachnoi==='generating';
 
@@ -187,7 +188,7 @@ function App(){
           <div className="flow-spacer"></div>
           <button className="btn btn-primary" onClick={()=>setShowHist(true)}><Icon name="history" size={16}/>Lịch sử</button>
         </div>
-        <h1 className="page-title" style={{marginBottom:6}}>Tạo bài giảng bằng AI</h1>
+        <h1 className="page-title" style={{marginBottom:6}}>Tạo nội dung bằng AI</h1>
         <p className="lesson-sub">Bài: <b>{LESSON.title}</b> · {cfg.subject} · {cfg.grade}</p>
 
         {/* type toggles */}
@@ -208,7 +209,7 @@ function App(){
         {/* accordion */}
         <div className="acc">
           <Sec id="setup" index={1} title="Nguồn & thiết lập" open={open==='setup'}
-               status={phase==='ready'?'done':null} summary={setupSummary} onHeader={setOpen}>
+               status={phase==='ready'?'done':null} summary={setupSummary} onHeader={toggleOpen}>
             <p className="sec-sub">Nhập nội dung bài học (hoặc tải file), chọn mức độ và tuỳ chọn cho từng loại.</p>
             <div className="setup-grid">
               <div className="full">
@@ -217,7 +218,7 @@ function App(){
               </div>
               <div><label className="lbl-sm">Mức độ</label>
                 <select className="ctrl" value={cfg.level} onChange={e=>setCfg({...cfg,level:e.target.value})}>
-                  <option>Dễ</option><option>Trung bình</option><option>Khó</option></select></div>
+                  <option>Dễ</option><option>Trung bình</option><option>Khó</option><option>Tổng hợp</option></select></div>
               <div><label className="lbl-sm">Lớp</label>
                 <select className="ctrl" value={cfg.grade} onChange={e=>setCfg({...cfg,grade:e.target.value})}>
                   <option>Lớp 1</option><option>Lớp 2</option><option>Lớp 3</option><option>Lớp 4</option><option>Lớp 5</option></select></div>
@@ -262,9 +263,9 @@ function App(){
               : (t.id==='sachnoi' ? `Đang tạo · ${audioPct}%` : 'Đang tạo…');
             return (
               <Sec key={t.id} id={t.id} index={i+2} title={t.name} open={open===t.id}
-                   status={st} summary={sum} onHeader={setOpen}>
+                   status={st} summary={sum} onHeader={toggleOpen}>
                 {st==='done'
-                  ? (t.id==='baidoc' ? <ReadingBody/> : t.id==='sachnoi' ? <AudioBody/> : <ExerciseBody/>)
+                  ? (t.id==='baidoc' ? <ReadingBody/> : t.id==='sachnoi' ? <AudioBody/> : <ExerciseBody level={cfg.level}/>)
                   : st==='cancelled'
                     ? <AudioCancelled onRetry={runAudio}/>
                     : (t.id==='sachnoi'
