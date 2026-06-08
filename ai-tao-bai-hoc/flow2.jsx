@@ -137,7 +137,9 @@ function App(){
   const [audioPct, setAudioPct] = useState(0);
   const [showHist, setShowHist] = useState(false);
   const [toast, setToast] = useState(null);
+  const [files, setFiles] = useState([]);
   const audioTimer = React.useRef(null);
+  const addFiles = list => setFiles(f=>[...f, ...[...list].map(x=>({name:x.name, isImg:(x.type||'').startsWith('image/')}))]);
 
   const toggleType = id => setTypes(s=>{const n=new Set(s);n.has(id)?n.delete(id):n.add(id);return n;});
   const toggleOpen = id => setOpen(o => o===id ? null : id);   // bấm lại (mũi tên) để đóng
@@ -188,8 +190,7 @@ function App(){
           <div className="flow-spacer"></div>
           <button className="btn btn-primary" onClick={()=>setShowHist(true)}><Icon name="history" size={16}/>Lịch sử</button>
         </div>
-        <h1 className="page-title" style={{marginBottom:6}}>Tạo nội dung bằng AI</h1>
-        <p className="lesson-sub">Bài: <b>{LESSON.title}</b> · {cfg.subject} · {cfg.grade}</p>
+        <h1 className="page-title" style={{marginBottom:18}}>Tạo nội dung bằng AI</h1>
 
         {/* type toggles */}
         <div className="type-row">
@@ -202,9 +203,6 @@ function App(){
             </div>
           ))}
         </div>
-        <p className="type-hint">{phase==='setup'
-          ? 'Chọn loại bài giảng muốn tạo. Sau khi tạo, tất cả kết quả hiện ngay bên dưới — không cần vào Lịch sử.'
-          : 'Các kết quả được tạo cho từng loại đã chọn, xem & chỉnh ngay bên dưới.'}</p>
 
         {/* accordion */}
         <div className="acc">
@@ -232,9 +230,22 @@ function App(){
 
             <div className="upload-mini">
               <span className="or">Hoặc tải file:</span>
-              <button className="btn"><Icon name="upload2" size={15}/>Chọn file (PDF, Word, Excel)</button>
-              <span className="muted" style={{fontSize:13}}>Tối đa 15MB</span>
+              <label className="btn"><Icon name="upload2" size={15}/>Chọn file (Ảnh, PDF, Word, Excel)
+                <input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style={{display:'none'}}
+                  onChange={e=>{addFiles(e.target.files); e.target.value='';}}/>
+              </label>
+              <span className="muted" style={{fontSize:13}}>Ảnh, PDF, Word, Excel · tối đa 15MB</span>
             </div>
+            {files.length>0 && (
+              <div className="file-pills">
+                {files.map((f,i)=>(
+                  <span className="file-pill" key={i}>
+                    <Icon name={f.isImg?'image':'fileSpread'} size={15}/>{f.name}
+                    <span className="x" onClick={()=>setFiles(fs=>fs.filter((_,j)=>j!==i))}><Icon name="x" size={13}/></span>
+                  </span>
+                ))}
+              </div>
+            )}
 
             {sel('baitap') && (
               <div className="qty-box">
